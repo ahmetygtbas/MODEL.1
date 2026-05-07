@@ -96,10 +96,10 @@ VERI_YETERLILIGI_SKORU = 100
 
 # Yatırım türleri etiketi
 YATIRIM_ETIKETLERI = {
-    "EV": "Enerji Verimliliği",
-    "GES": "Çatı GES",
-    "YK": "Yük Yönetimi",
-    "BAT": "Batarya Depolama",
+    "EV": "Energy Efficiency",
+    "GES": "Rooftop Solar PV",
+    "YK": "Load Management",
+    "BAT": "Battery Storage",
 }
 
 # Örnek veri setleri – 3 gerçekçi OSB KOBİ senaryosu
@@ -664,11 +664,11 @@ def aciklama_uret(v: dict, r: dict) -> str:
 
     # En yüksek kriter skorunu bul (birinci için)
     kriter_adlari = {
-        "E": "ekonomik çekicilik",
-        "T": "teknik uygunluk",
-        "P": "performans iyileştirme potansiyeli",
-        "U": "uygulanabilirlik",
-        "C": "çevresel etki",
+        "E": "economic attractiveness",
+        "T": "technical suitability",
+        "P": "performance improvement potential",
+        "U": "feasibility",
+        "C": "environmental impact",
     }
     kriter_skorlari_birinci = {
         k: r[k][birinci_kod] for k in ["E", "T", "P", "U", "C"]
@@ -682,16 +682,15 @@ def aciklama_uret(v: dict, r: dict) -> str:
     en_dusuk_kriter = min(kriter_skorlari_sonuncu, key=kriter_skorlari_sonuncu.get)
 
     metin = (
-        f"Analiz sonucuna göre {birinci_ad} seçeneği {birinci_skor:.1f} puanla "
-        f"en yüksek önceliğe sahiptir. "
-        f"Bu seçeneğin öne çıkmasında {kriter_adlari[en_yuksek_kriter]} kriteri "
-        f"({kriter_skorlari_birinci[en_yuksek_kriter]:.1f} puan) belirleyici olmuştur. "
-        f"{sonuncu_ad} seçeneği ise {sonuncu_skor:.1f} puanla son sırada yer almaktadır; "
-        f"bunun başlıca nedeni {kriter_adlari[en_dusuk_kriter]} kriterindeki "
-        f"düşük performanstır ({kriter_skorlari_sonuncu[en_dusuk_kriter]:.1f} puan). "
-        f"Girilen aylık tüketim ({v['aylik_tuketim_kwh']:,.0f} kWh) ve "
-        f"fatura ({v['aylik_fatura_tl']:,.0f} TL) değerleri tüm skorları doğrudan etkilemiştir. "
-        f"Bu çıktı ön fizibilite niteliğinde olup detaylı mühendislik analizinin yerine geçmez."
+        f"According to the analysis, {birinci_ad} ranks highest with a score of {birinci_skor:.1f}. "
+        f"The {kriter_adlari[en_yuksek_kriter]} criterion "
+        f"({kriter_skorlari_birinci[en_yuksek_kriter]:.1f} points) was decisive in its prominence. "
+        f"{sonuncu_ad} ranks last with a score of {sonuncu_skor:.1f}; "
+        f"the main reason being low performance in the {kriter_adlari[en_dusuk_kriter]} criterion "
+        f"({kriter_skorlari_sonuncu[en_dusuk_kriter]:.1f} points). "
+        f"The entered monthly consumption ({v['aylik_tuketim_kwh']:,.0f} kWh) and "
+        f"bill ({v['aylik_fatura_tl']:,.0f} TL) values directly influenced all scores. "
+        f"This output is of pre-feasibility nature and does not replace detailed engineering analysis."
     )
     return metin
 
@@ -712,7 +711,7 @@ def format_kwh(val: float) -> str:
 def format_yil(val: float) -> str:
     if val >= 999:
         return "—"
-    return f"{val:.1f} yıl"
+    return f"{val:.1f} yrs"
 
 
 # ============================================================
@@ -722,11 +721,11 @@ def format_yil(val: float) -> str:
 def durum_etiketi(toplam_skor: float, geri_odeme: float) -> str:
     """Ön fizibilite durum etiketi üretir. Deterministik kural."""
     if toplam_skor >= 75 and geri_odeme <= 4:
-        return "Güçlü öncelik"
+        return "Strong Priority"
     elif toplam_skor >= 60:
-        return "Değerlendirilmeli"
+        return "Needs Evaluation"
     else:
-        return "İkinci aşama adayı"
+        return "Second Phase Candidate"
 
 
 def excel_olustur(veri: dict, sonuc: dict) -> BytesIO:
@@ -741,27 +740,27 @@ def excel_olustur(veri: dict, sonuc: dict) -> BytesIO:
 
     # Girdi etiketleri
     girdi_etiketleri = {
-        "aylik_tuketim_kwh": ("Aylık Tüketim", "kWh/ay"),
-        "aylik_fatura_tl": ("Aylık Fatura", "TL/ay"),
-        "maksimum_talep_kw": ("Maksimum Talep", "kW"),
-        "gunluk_calisma_saati": ("Günlük Çalışma Saati", "saat"),
-        "haftalik_calisma_gunu": ("Haftalık Çalışma Günü", "gün"),
-        "gunduz_calisma_orani": ("Gündüz Çalışma Oranı", "%"),
-        "faaliyet_gostergesi_turu": ("Faaliyet Göstergesi Türü", "kategori"),
-        "aylik_faaliyet_miktari": ("Aylık Faaliyet Miktarı", "birim"),
-        "yatirim_butcesi_tl": ("Yatırım Bütçesi", "TL"),
-        "uretim_kesintisi_toleransi": ("Üretim Kesintisi Toleransı", "kategori"),
-        "basincli_hava_yogunlugu": ("Basınçlı Hava Yoğunluğu", "kategori"),
-        "aydinlatma_sistem_yasi": ("Aydınlatma Sistem Yaşı", "kategori"),
-        "motor_surucu_onemi": ("Motor Sürücü Önemi", "kategori"),
-        "hvac_onemi": ("HVAC Önemi", "kategori"),
-        "yardimci_servis_belirginligi": ("Yardımcı Servis Belirginliği", "kategori"),
-        "kullanilabilir_cati_alani_m2": ("Kullanılabilir Çatı Alanı", "m²"),
-        "cati_uygunlugu": ("Çatı Uygunluğu", "kategori"),
-        "yuk_kaydirma_esnekligi": ("Yük Kaydırma Esnekliği", "kategori"),
-        "pik_saatlerde_uretim_zorunlulugu": ("Pik Saatlerde Üretim Zorunluluğu", "kategori"),
-        "kritik_yuk_hassasiyeti": ("Kritik Yük Hassasiyeti", "kategori"),
-        "mevcut_veya_planlanan_ges": ("Mevcut veya Planlanan GES", "kategori"),
+        "aylik_tuketim_kwh": ("Monthly Consumption", "kWh/mo"),
+        "aylik_fatura_tl": ("Monthly Bill", "TL/mo"),
+        "maksimum_talep_kw": ("Maximum Demand", "kW"),
+        "gunluk_calisma_saati": ("Daily Operating Hours", "hours"),
+        "haftalik_calisma_gunu": ("Weekly Operating Days", "days"),
+        "gunduz_calisma_orani": ("Daytime Operation Ratio", "%"),
+        "faaliyet_gostergesi_turu": ("Activity Indicator Type", "category"),
+        "aylik_faaliyet_miktari": ("Monthly Activity Amount", "unit"),
+        "yatirim_butcesi_tl": ("Investment Budget", "TL"),
+        "uretim_kesintisi_toleransi": ("Production Interruption Tolerance", "category"),
+        "basincli_hava_yogunlugu": ("Compressed Air Intensity", "category"),
+        "aydinlatma_sistem_yasi": ("Lighting System Age", "category"),
+        "motor_surucu_onemi": ("Motor Drive Importance", "category"),
+        "hvac_onemi": ("HVAC Importance", "category"),
+        "yardimci_servis_belirginligi": ("Auxiliary Service Prominence", "category"),
+        "kullanilabilir_cati_alani_m2": ("Available Roof Area", "m²"),
+        "cati_uygunlugu": ("Roof Suitability", "category"),
+        "yuk_kaydirma_esnekligi": ("Load Shifting Flexibility", "category"),
+        "pik_saatlerde_uretim_zorunlulugu": ("Peak Hours Production Requirement", "category"),
+        "kritik_yuk_hassasiyeti": ("Critical Load Sensitivity", "category"),
+        "mevcut_veya_planlanan_ges": ("Existing or Planned Solar PV", "category"),
     }
 
     with pd.ExcelWriter(output, engine="openpyxl") as writer:
@@ -769,56 +768,56 @@ def excel_olustur(veri: dict, sonuc: dict) -> BytesIO:
         girdi_rows = []
         for key, (label, birim) in girdi_etiketleri.items():
             girdi_rows.append({
-                "Alan Adı": label,
-                "Değer": veri.get(key, ""),
-                "Birim / Kategori": birim,
+                "Field Name": label,
+                "Value": veri.get(key, ""),
+                "Unit / Category": birim,
             })
         df_girdi = pd.DataFrame(girdi_rows)
-        df_girdi.to_excel(writer, sheet_name="Girdi Verileri", index=False)
+        df_girdi.to_excel(writer, sheet_name="Input Data", index=False)
 
         # Sayfa 2: Sonuç Özeti
         sonuc_rows = []
         for kod, _ in sonuc["siralama"]:
             sonuc_rows.append({
-                "Yatırım Adı": YATIRIM_ETIKETLERI[kod],
-                "Öncelik Sırası": sonuc["oncelik"][kod],
-                "Toplam Skor": round(sonuc["toplam"][kod], 2),
-                "Ekonomik Çekicilik": round(sonuc["E"][kod], 2),
-                "Teknik Uygunluk": round(sonuc["T"][kod], 2),
-                "Performans İyileştirme Potansiyeli": round(sonuc["P"][kod], 2),
-                "Uygulanabilirlik": round(sonuc["U"][kod], 2),
-                "Çevresel Etki": round(sonuc["C"][kod], 2),
+                "Investment Type": YATIRIM_ETIKETLERI[kod],
+                "Priority Rank": sonuc["oncelik"][kod],
+                "Total Score": round(sonuc["toplam"][kod], 2),
+                "Economic Attractiveness": round(sonuc["E"][kod], 2),
+                "Technical Suitability": round(sonuc["T"][kod], 2),
+                "Performance Improvement Potential": round(sonuc["P"][kod], 2),
+                "Feasibility": round(sonuc["U"][kod], 2),
+                "Environmental Impact": round(sonuc["C"][kod], 2),
             })
         df_sonuc = pd.DataFrame(sonuc_rows)
-        df_sonuc.to_excel(writer, sheet_name="Sonuç Özeti", index=False)
+        df_sonuc.to_excel(writer, sheet_name="Results Summary", index=False)
 
         # Sayfa 3: Ön Fizibilite Özeti
         fizibilite_rows = []
         for kod, _ in sonuc["siralama"]:
             go_val = sonuc["geri_odeme"][kod]
             fizibilite_rows.append({
-                "Yatırım Adı": YATIRIM_ETIKETLERI[kod],
-                "Tahmini Yatırım Maliyeti (TL)": round(sonuc["yatirim"][kod], 0),
-                "Tahmini Yıllık Tasarruf (TL)": round(sonuc["yillik_tasarruflar"][kod], 0),
-                "Basit Geri Ödeme Süresi (yıl)": round(go_val, 2) if go_val < 999 else "—",
-                "Durum Etiketi": durum_etiketi(sonuc["toplam"][kod], go_val),
+                "Investment Type": YATIRIM_ETIKETLERI[kod],
+                "Estimated Investment Cost (TL)": round(sonuc["yatirim"][kod], 0),
+                "Estimated Annual Savings (TL)": round(sonuc["yillik_tasarruflar"][kod], 0),
+                "Simple Payback Period (yrs)": round(go_val, 2) if go_val < 999 else "—",
+                "Status Label": durum_etiketi(sonuc["toplam"][kod], go_val),
             })
         df_fizibilite = pd.DataFrame(fizibilite_rows)
-        df_fizibilite.to_excel(writer, sheet_name="Ön Fizibilite Özeti", index=False)
+        df_fizibilite.to_excel(writer, sheet_name="Pre-Feasibility Summary", index=False)
 
         # Sayfa 4: Teknik ve Ekonomik Detaylar
         detay_rows = []
         for kod, _ in sonuc["siralama"]:
             detay_rows.append({
-                "Yatırım Adı": YATIRIM_ETIKETLERI[kod],
-                "Tasarruf Skoru": round(sonuc["tasarruf_skorlari"][kod], 2),
-                "Geri Ödeme Skoru": round(sonuc["geri_odeme_skorlari"][kod], 2),
-                "Bütçe Uyumu Skoru": round(sonuc["butce_uyum"][kod], 2),
-                "Yıllık Enerji Azaltımı (kWh)": round(sonuc["yillik_enerji_azaltimi"][kod], 0),
-                "Etki Oranı": round(sonuc["etki_oranlari"][kod], 4),
+                "Investment Type": YATIRIM_ETIKETLERI[kod],
+                "Savings Score": round(sonuc["tasarruf_skorlari"][kod], 2),
+                "Payback Score": round(sonuc["geri_odeme_skorlari"][kod], 2),
+                "Budget Fit Score": round(sonuc["butce_uyum"][kod], 2),
+                "Annual Energy Reduction (kWh)": round(sonuc["yillik_enerji_azaltimi"][kod], 0),
+                "Impact Ratio": round(sonuc["etki_oranlari"][kod], 4),
             })
         df_detay = pd.DataFrame(detay_rows)
-        df_detay.to_excel(writer, sheet_name="Teknik ve Ekonomik", index=False)
+        df_detay.to_excel(writer, sheet_name="Technical & Economic", index=False)
 
     output.seek(0)
     return output
@@ -839,7 +838,7 @@ YATIRIM_IKONLARI = {
 
 def main():
     st.set_page_config(
-        page_title="EN²TECH Enerji Pusulası",
+        page_title="EN²TECH Energy Compass",
         page_icon="⚡",
         layout="wide",
         initial_sidebar_state="collapsed",
@@ -1303,20 +1302,20 @@ def main():
         """
         <div class="hero-section">
             <div class="hero-content">
-                <div class="hero-badge">EN²TECH 2026 &nbsp;|&nbsp; Akıllı ve Verimli Enerji Sistemleri</div>
-                <h1 class="hero-title">ENERJİ <span>PUSULASI</span></h1>
+                <div class="hero-badge">EN²TECH 2026 &nbsp;|&nbsp; Smart & Efficient Energy Systems</div>
+                <h1 class="hero-title">ENERGY <span>COMPASS</span></h1>
                 <p class="hero-subtitle">
-                    OSB içindeki KOBİ ve orta ölçekli üretim tesisleri için veri temelli
-                    enerji dönüşümü yatırım önceliklendirme ve hızlı ön fizibilite modeli
+                    Data-driven energy transition investment prioritization and rapid
+                    pre-feasibility model for SMEs and mid-scale manufacturing facilities in OIZs
                 </p>
                 <p class="hero-subtitle-2">
-                    Sanayide doğru enerji yatırımına yön veren veri temelli karar modeli
+                    A data-driven decision model guiding the right energy investments in industry
                 </p>
                 <div class="hero-icons">
-                    <div class="hero-icon-box"><span class="icon">⚡</span>Enerji<br>Verimliliği</div>
-                    <div class="hero-icon-box"><span class="icon">☀️</span>Çatı<br>GES</div>
-                    <div class="hero-icon-box"><span class="icon">⏱️</span>Yük<br>Yönetimi</div>
-                    <div class="hero-icon-box"><span class="icon">🔋</span>Batarya<br>Depolama</div>
+                    <div class="hero-icon-box"><span class="icon">⚡</span>Energy<br>Efficiency</div>
+                    <div class="hero-icon-box"><span class="icon">☀️</span>Rooftop<br>Solar PV</div>
+                    <div class="hero-icon-box"><span class="icon">⏱️</span>Load<br>Management</div>
+                    <div class="hero-icon-box"><span class="icon">🔋</span>Battery<br>Storage</div>
                 </div>
             </div>
         </div>
@@ -1329,8 +1328,8 @@ def main():
         <div class="notice-banner">
             <span class="n-icon">⚠️</span>
             <span class="n-text">
-                <strong>Önemli:</strong> Bu araç detaylı mühendislik fizibilitesinin yerine geçmez.
-                Hızlı ön fizibilite ve yatırım önceliklendirme amacıyla çalışır.
+                <strong>Important:</strong> This tool does not replace detailed engineering feasibility.
+                It serves for rapid pre-feasibility and investment prioritization purposes.
             </span>
         </div>
         """,
@@ -1356,153 +1355,153 @@ def main():
 
     # ===================== 2. VERİ GİRİŞ BÖLÜMÜ =====================
     st.markdown(
-        '<div class="section-header"><div class="dot"></div><h2>Veri Girişleri</h2></div>',
+        '<div class="section-header"><div class="dot"></div><h2>Data Inputs</h2></div>',
         unsafe_allow_html=True,
     )
 
     col_s1, col_s2, col_s3 = st.columns(3)
     with col_s1:
-        st.button("📋 Örnek 1: Dengeli KOBİ", on_click=_ornek_sec, args=("1",), type="primary", use_container_width=True)
+        st.button("📋 Example 1: Balanced SME", on_click=_ornek_sec, args=("1",), type="primary", use_container_width=True)
     with col_s2:
-        st.button("☀️ Örnek 2: GES Uygun Tesis", on_click=_ornek_sec, args=("2",), type="primary", use_container_width=True)
+        st.button("☀️ Example 2: Solar-Ready Facility", on_click=_ornek_sec, args=("2",), type="primary", use_container_width=True)
     with col_s3:
-        st.button("⚡ Örnek 3: Verimlilik Öncelikli", on_click=_ornek_sec, args=("3",), type="primary", use_container_width=True)
+        st.button("⚡ Example 3: Efficiency-First", on_click=_ornek_sec, args=("3",), type="primary", use_container_width=True)
 
-    with st.expander("🏭  Temel Tesis Verileri", expanded=True):
+    with st.expander("🏭  Basic Facility Data", expanded=True):
         col1, col2, col3 = st.columns(3)
         with col1:
             aylik_tuketim_kwh = st.number_input(
-                "Aylık Tüketim (kWh/ay)", min_value=0,
+                "Monthly Consumption (kWh/mo)", min_value=0,
                 value=ov.get("aylik_tuketim_kwh", 100000), step=1000,
-                help="Tesisinizin aylık toplam elektrik tüketimi",
+                help="Your facility's total monthly electricity consumption",
             )
             aylik_fatura_tl = st.number_input(
-                "Aylık Fatura (TL/ay)", min_value=0,
+                "Monthly Bill (TL/mo)", min_value=0,
                 value=ov.get("aylik_fatura_tl", 500000), step=10000,
-                help="Aylık elektrik faturası tutarı",
+                help="Monthly electricity bill amount",
             )
             maksimum_talep_kw = st.number_input(
-                "Maksimum Talep (kW)", min_value=0,
+                "Maximum Demand (kW)", min_value=0,
                 value=ov.get("maksimum_talep_kw", 500), step=10,
-                help="Tesisinizin en yüksek anlık güç talebi",
+                help="Your facility's peak instantaneous power demand",
             )
         with col2:
             gunluk_calisma_saati = st.slider(
-                "Günlük Çalışma Saati", min_value=0, max_value=24,
+                "Daily Operating Hours", min_value=0, max_value=24,
                 value=ov.get("gunluk_calisma_saati", 8),
             )
             haftalik_calisma_gunu = st.slider(
-                "Haftalık Çalışma Günü", min_value=1, max_value=7,
+                "Weekly Operating Days", min_value=1, max_value=7,
                 value=ov.get("haftalik_calisma_gunu", 5),
             )
             gunduz_calisma_orani = st.slider(
-                "Gündüz Çalışma Oranı (%)", min_value=0, max_value=100,
+                "Daytime Operation Ratio (%)", min_value=0, max_value=100,
                 value=ov.get("gunduz_calisma_orani", 50),
-                help="Üretim faaliyetinin gündüz saatlerinde gerçekleşme oranı",
+                help="Ratio of production activities occurring during daytime hours",
             )
         with col3:
-            faaliyet_turu_secenekler = ["ton", "adet", "m2", "metre", "calisma_saati", "diger"]
+            faaliyet_turu_secenekler = ["Ton", "Piece", "m2", "Meter", "Working hours", "Others"]
             faaliyet_gostergesi_turu = st.selectbox(
-                "Faaliyet Göstergesi Türü", faaliyet_turu_secenekler,
+                "Activity Indicator Type", faaliyet_turu_secenekler,
                 index=_idx(faaliyet_turu_secenekler, "faaliyet_gostergesi_turu"),
             )
             aylik_faaliyet_miktari = st.number_input(
-                "Aylık Faaliyet Miktarı", min_value=0,
+                "Monthly Activity Amount", min_value=0,
                 value=ov.get("aylik_faaliyet_miktari", 10000), step=100,
             )
             yatirim_butcesi_tl = st.number_input(
-                "Yatırım Bütçesi (TL)", min_value=0,
+                "Investment Budget (TL)", min_value=0,
                 value=ov.get("yatirim_butcesi_tl", 5000000), step=100000,
-                help="Bu dönüşüm için ayrılabilecek toplam bütçe",
+                help="Total budget allocable for this transformation",
             )
             tolerans_secenekler = ["dusuk", "orta", "yuksek"]
-            tolerans_etiketler = {"dusuk": "Düşük", "orta": "Orta", "yuksek": "Yüksek"}
+            tolerans_etiketler = {"dusuk": "Low", "orta": "Medium", "yuksek": "High"}
             uretim_kesintisi_toleransi = st.selectbox(
-                "Üretim Kesintisi Toleransı", tolerans_secenekler,
+                "Production Interruption Tolerance", tolerans_secenekler,
                 index=_idx(tolerans_secenekler, "uretim_kesintisi_toleransi"),
                 format_func=lambda x: tolerans_etiketler[x],
             )
 
     yogunluk_secenekler = ["yok", "dusuk", "orta", "yuksek"]
-    yogunluk_etiketler = {"yok": "Yok", "dusuk": "Düşük", "orta": "Orta", "yuksek": "Yüksek"}
+    yogunluk_etiketler = {"yok": "None", "dusuk": "Low", "orta": "Medium", "yuksek": "High"}
 
-    with st.expander("⚡  Enerji Verimliliği Girdileri"):
+    with st.expander("⚡  Energy Efficiency Inputs"):
         col1, col2 = st.columns(2)
         with col1:
             basincli_hava_yogunlugu = st.selectbox(
-                "Basınçlı Hava Yoğunluğu", yogunluk_secenekler,
+                "Compressed Air Intensity", yogunluk_secenekler,
                 index=_idx(yogunluk_secenekler, "basincli_hava_yogunlugu"),
                 format_func=lambda x: yogunluk_etiketler[x],
             )
             aydinlatma_yas_secenekler = ["yeni", "orta", "eski"]
-            aydinlatma_yas_etiketler = {"yeni": "Yeni", "orta": "Orta", "eski": "Eski"}
+            aydinlatma_yas_etiketler = {"yeni": "New", "orta": "Medium", "eski": "Old"}
             aydinlatma_sistem_yasi = st.selectbox(
-                "Aydınlatma Sistem Yaşı", aydinlatma_yas_secenekler,
+                "Lighting System Age", aydinlatma_yas_secenekler,
                 index=_idx(aydinlatma_yas_secenekler, "aydinlatma_sistem_yasi"),
                 format_func=lambda x: aydinlatma_yas_etiketler[x],
             )
             motor_surucu_onemi = st.selectbox(
-                "Motor Sürücü Önemi", yogunluk_secenekler,
+                "Motor Drive Importance", yogunluk_secenekler,
                 index=_idx(yogunluk_secenekler, "motor_surucu_onemi"),
                 format_func=lambda x: yogunluk_etiketler[x], key="motor",
             )
         with col2:
             hvac_onemi = st.selectbox(
-                "HVAC Önemi", ["dusuk", "orta", "yuksek"],
+                "HVAC Importance", ["dusuk", "orta", "yuksek"],
                 index=_idx(["dusuk", "orta", "yuksek"], "hvac_onemi"),
                 format_func=lambda x: yogunluk_etiketler[x],
             )
             yardimci_servis_belirginligi = st.selectbox(
-                "Yardımcı Servis Belirginliği", ["dusuk", "orta", "yuksek"],
+                "Auxiliary Service Prominence", ["dusuk", "orta", "yuksek"],
                 index=_idx(["dusuk", "orta", "yuksek"], "yardimci_servis_belirginligi"),
                 format_func=lambda x: yogunluk_etiketler[x],
             )
 
-    with st.expander("☀️  Çatı GES Girdileri"):
+    with st.expander("☀️  Rooftop Solar PV Inputs"):
         col1, col2 = st.columns(2)
         with col1:
             kullanilabilir_cati_alani_m2 = st.number_input(
-                "Kullanılabilir Çatı Alanı (m²)", min_value=0,
+                "Available Roof Area (m²)", min_value=0,
                 value=ov.get("kullanilabilir_cati_alani_m2", 1000), step=50,
             )
         with col2:
             cati_uyg_secenekler = ["uygun_degil", "kismen_uygun", "uygun"]
-            cati_uyg_etiketler = {"uygun_degil": "Uygun Değil", "kismen_uygun": "Kısmen Uygun", "uygun": "Uygun"}
+            cati_uyg_etiketler = {"uygun_degil": "Not Suitable", "kismen_uygun": "Partially Suitable", "uygun": "Suitable"}
             cati_uygunlugu = st.selectbox(
-                "Çatı Uygunluğu", cati_uyg_secenekler,
+                "Roof Suitability", cati_uyg_secenekler,
                 index=_idx(cati_uyg_secenekler, "cati_uygunlugu"),
                 format_func=lambda x: cati_uyg_etiketler[x],
             )
 
     onem_secenekler = ["dusuk", "orta", "yuksek"]
-    with st.expander("⏱️  Yük Yönetimi Girdileri"):
+    with st.expander("⏱️  Load Management Inputs"):
         col1, col2 = st.columns(2)
         with col1:
             yuk_kaydirma_esnekligi = st.selectbox(
-                "Yük Kaydırma Esnekliği", onem_secenekler,
+                "Load Shifting Flexibility", onem_secenekler,
                 index=_idx(onem_secenekler, "yuk_kaydirma_esnekligi"),
                 format_func=lambda x: yogunluk_etiketler[x], key="yuk_esn",
             )
         with col2:
             pik_saatlerde_uretim_zorunlulugu = st.selectbox(
-                "Pik Saatlerde Üretim Zorunluluğu", onem_secenekler,
+                "Peak Hours Production Requirement", onem_secenekler,
                 index=_idx(onem_secenekler, "pik_saatlerde_uretim_zorunlulugu"),
                 format_func=lambda x: yogunluk_etiketler[x], key="pik",
             )
 
-    with st.expander("🔋  Batarya Depolama Girdileri"):
+    with st.expander("🔋  Battery Storage Inputs"):
         col1, col2 = st.columns(2)
         with col1:
             kritik_yuk_hassasiyeti = st.selectbox(
-                "Kritik Yük Hassasiyeti", onem_secenekler,
+                "Critical Load Sensitivity", onem_secenekler,
                 index=_idx(onem_secenekler, "kritik_yuk_hassasiyeti"),
                 format_func=lambda x: yogunluk_etiketler[x], key="kritik",
             )
         with col2:
             ikili_secenekler = ["hayir", "evet"]
-            ikili_etiketler = {"hayir": "Hayır", "evet": "Evet"}
+            ikili_etiketler = {"hayir": "No", "evet": "Yes"}
             mevcut_veya_planlanan_ges = st.selectbox(
-                "Mevcut veya Planlanan GES", ikili_secenekler,
+                "Existing or Planned Solar PV", ikili_secenekler,
                 index=_idx(ikili_secenekler, "mevcut_veya_planlanan_ges"),
                 format_func=lambda x: ikili_etiketler[x],
             )
@@ -1511,13 +1510,13 @@ def main():
     st.markdown(
         f"""
         <div class="summary-panel">
-            <h3>📊 Girdi Özeti</h3>
+            <h3>📊 Input Summary</h3>
             <div class="summary-grid">
-                <div class="summary-item"><div class="val">{aylik_tuketim_kwh:,.0f}</div><div class="lbl">kWh / ay</div></div>
-                <div class="summary-item"><div class="val">₺{aylik_fatura_tl:,.0f}</div><div class="lbl">TL / ay</div></div>
-                <div class="summary-item"><div class="val">{maksimum_talep_kw:,.0f}</div><div class="lbl">kW maks talep</div></div>
-                <div class="summary-item"><div class="val">%{gunduz_calisma_orani}</div><div class="lbl">gündüz oranı</div></div>
-                <div class="summary-item"><div class="val">₺{yatirim_butcesi_tl:,.0f}</div><div class="lbl">yatırım bütçesi</div></div>
+                <div class="summary-item"><div class="val">{aylik_tuketim_kwh:,.0f}</div><div class="lbl">kWh / mo</div></div>
+                <div class="summary-item"><div class="val">₺{aylik_fatura_tl:,.0f}</div><div class="lbl">TL / mo</div></div>
+                <div class="summary-item"><div class="val">{maksimum_talep_kw:,.0f}</div><div class="lbl">kW max demand</div></div>
+                <div class="summary-item"><div class="val">%{gunduz_calisma_orani}</div><div class="lbl">daytime ratio</div></div>
+                <div class="summary-item"><div class="val">₺{yatirim_butcesi_tl:,.0f}</div><div class="lbl">investment budget</div></div>
             </div>
         </div>
         """,
@@ -1525,14 +1524,14 @@ def main():
     )
 
     # ===================== HESAPLAMA =====================
-    hesapla_btn = st.button("🚀 Analizi Çalıştır", type="primary", use_container_width=True)
+    hesapla_btn = st.button("🚀 Run Analysis", type="primary", use_container_width=True)
 
     if hesapla_btn:
         if aylik_tuketim_kwh <= 0:
-            st.error("Aylık tüketim sıfırdan büyük olmalıdır.")
+            st.error("Monthly consumption must be greater than zero.")
             return
         if aylik_fatura_tl <= 0:
-            st.error("Aylık fatura sıfırdan büyük olmalıdır.")
+            st.error("Monthly bill must be greater than zero.")
             return
 
         veri = {
@@ -1567,8 +1566,8 @@ def main():
         st.markdown(
             """
             <div class="results-banner">
-                <h2>🏆 Önceliklendirme Sonuçları</h2>
-                <p>Yatırım seçenekleri teknik, ekonomik ve çevresel ölçütlere göre sıralandı</p>
+                <h2>🏆 Prioritization Results</h2>
+                <p>Investment options ranked by technical, economic, and environmental criteria</p>
             </div>
             """,
             unsafe_allow_html=True,
@@ -1595,14 +1594,14 @@ def main():
                     <span class="{score_cls}">{skor:.1f}</span>
                 </div>
                 <div class="inv-metrics">
-                    <div class="inv-metric"><div class="m-label">Ekonomik Çekicilik</div><div class="m-value">{sonuc['E'][kod]:.1f}</div></div>
-                    <div class="inv-metric"><div class="m-label">Teknik Uygunluk</div><div class="m-value">{sonuc['T'][kod]:.1f}</div></div>
-                    <div class="inv-metric"><div class="m-label">Performans Pot.</div><div class="m-value">{sonuc['P'][kod]:.1f}</div></div>
-                    <div class="inv-metric"><div class="m-label">Uygulanabilirlik</div><div class="m-value">{sonuc['U'][kod]:.1f}</div></div>
-                    <div class="inv-metric"><div class="m-label">Çevresel Etki</div><div class="m-value">{sonuc['C'][kod]:.1f}</div></div>
-                    <div class="inv-metric"><div class="m-label">Yatırım</div><div class="m-value">{format_tl(sonuc['yatirim'][kod])}</div></div>
-                    <div class="inv-metric"><div class="m-label">Yıllık Tasarruf</div><div class="m-value">{format_tl(sonuc['yillik_tasarruflar'][kod])}</div></div>
-                    <div class="inv-metric"><div class="m-label">Geri Ödeme</div><div class="m-value">{format_yil(sonuc['geri_odeme'][kod])}</div></div>
+                    <div class="inv-metric"><div class="m-label">Economic Attr.</div><div class="m-value">{sonuc['E'][kod]:.1f}</div></div>
+                    <div class="inv-metric"><div class="m-label">Technical Suit.</div><div class="m-value">{sonuc['T'][kod]:.1f}</div></div>
+                    <div class="inv-metric"><div class="m-label">Performance Pot.</div><div class="m-value">{sonuc['P'][kod]:.1f}</div></div>
+                    <div class="inv-metric"><div class="m-label">Feasibility</div><div class="m-value">{sonuc['U'][kod]:.1f}</div></div>
+                    <div class="inv-metric"><div class="m-label">Environmental</div><div class="m-value">{sonuc['C'][kod]:.1f}</div></div>
+                    <div class="inv-metric"><div class="m-label">Investment</div><div class="m-value">{format_tl(sonuc['yatirim'][kod])}</div></div>
+                    <div class="inv-metric"><div class="m-label">Annual Savings</div><div class="m-value">{format_tl(sonuc['yillik_tasarruflar'][kod])}</div></div>
+                    <div class="inv-metric"><div class="m-label">Payback</div><div class="m-value">{format_yil(sonuc['geri_odeme'][kod])}</div></div>
                 </div>
             </div>
             """
@@ -1611,7 +1610,7 @@ def main():
 
         # C. Grafikler
         st.markdown(
-            '<div class="section-header"><div class="dot"></div><h2>Teknik ve Ekonomik Değerlendirme</h2></div>',
+            '<div class="section-header"><div class="dot"></div><h2>Technical & Economic Assessment</h2></div>',
             unsafe_allow_html=True,
         )
 
@@ -1630,19 +1629,19 @@ def main():
             )
         )
         fig_bar.update_layout(
-            xaxis_title="Toplam Skor", yaxis=dict(autorange="reversed"),
+            xaxis_title="Total Score", yaxis=dict(autorange="reversed"),
             height=260, margin=dict(l=10, r=30, t=10, b=40),
             plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
             font=dict(family="Inter", size=13, color="#0E2E5C"),
             xaxis=dict(range=[0, 105], gridcolor="#D4E0F0"),
         )
 
-        st.markdown('<div class="chart-card"><div class="chart-card-title">📊 Nihai Yatırım Öncelik Sıralaması</div>', unsafe_allow_html=True)
+        st.markdown('<div class="chart-card"><div class="chart-card-title">📊 Final Investment Priority Ranking</div>', unsafe_allow_html=True)
         st.plotly_chart(fig_bar, use_container_width=True, key="bar_chart")
         st.markdown('</div>', unsafe_allow_html=True)
 
         # Grouped bar + Radar yan yana
-        kriter_labels = ["Ekonomik\nÇekicilik", "Teknik\nUygunluk", "Performans\nPotansiyeli", "Uygulanabilirlik", "Çevresel\nEtki"]
+        kriter_labels = ["Economic\nAttractiveness", "Technical\nSuitability", "Performance\nPotential", "Feasibility", "Environmental\nImpact"]
         kriter_keys = ["E", "T", "P", "U", "C"]
         renk_paleti = {"EV": "#1F5FBF", "GES": "#37B5E5", "YK": "#00C16A", "BAT": "#5A7BA6"}
 
@@ -1660,19 +1659,19 @@ def main():
                     textfont=dict(size=10, color="#0E2E5C"),
                 ))
             fig_grouped.update_layout(
-                barmode="group", yaxis_title="Skor", height=420,
+                barmode="group", yaxis_title="Score", height=420,
                 margin=dict(l=10, r=10, t=30, b=40),
                 legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, font=dict(size=11, color="#0E2E5C")),
                 plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
                 font=dict(family="Inter", size=12, color="#0E2E5C"),
                 yaxis=dict(range=[0, 105], gridcolor="#D4E0F0"),
             )
-            st.markdown('<div class="chart-card"><div class="chart-card-title">📈 Kriter Bazlı Karşılaştırma</div>', unsafe_allow_html=True)
+            st.markdown('<div class="chart-card"><div class="chart-card-title">📈 Criteria-Based Comparison</div>', unsafe_allow_html=True)
             st.plotly_chart(fig_grouped, use_container_width=True, key="grouped_chart")
             st.markdown('</div>', unsafe_allow_html=True)
 
         with col_r:
-            radar_labels = ["Ekonomik Çekicilik", "Teknik Uygunluk", "Performans Potansiyeli", "Uygulanabilirlik", "Çevresel Etki"]
+            radar_labels = ["Economic Attractiveness", "Technical Suitability", "Performance Potential", "Feasibility", "Environmental Impact"]
             fig_radar = go.Figure()
             for kod in ["EV", "GES", "YK", "BAT"]:
                 values = [round(sonuc[k][kod], 1) for k in kriter_keys]
@@ -1692,35 +1691,35 @@ def main():
                 legend=dict(orientation="h", yanchor="bottom", y=-0.15, xanchor="center", x=0.5, font=dict(size=11, color="#0E2E5C")),
                 paper_bgcolor="rgba(0,0,0,0)", font=dict(family="Inter", size=12, color="#0E2E5C"),
             )
-            st.markdown('<div class="chart-card"><div class="chart-card-title">🎯 Radar Görünümü</div>', unsafe_allow_html=True)
+            st.markdown('<div class="chart-card"><div class="chart-card-title">🎯 Radar View</div>', unsafe_allow_html=True)
             st.plotly_chart(fig_radar, use_container_width=True, key="radar_chart")
             st.markdown('</div>', unsafe_allow_html=True)
 
         # Özet tablo
-        st.markdown('<div class="section-header"><div class="dot"></div><h2>Özet Tablo</h2></div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header"><div class="dot"></div><h2>Summary Table</h2></div>', unsafe_allow_html=True)
 
         tablo_data = []
         for kod, _ in siralama:
             tablo_data.append({
-                "Öncelik": sonuc["oncelik"][kod],
-                "Yatırım Türü": YATIRIM_ETIKETLERI[kod],
-                "Toplam Skor": round(sonuc["toplam"][kod], 1),
-                "Ekonomik": round(sonuc["E"][kod], 1),
-                "Teknik": round(sonuc["T"][kod], 1),
-                "Performans": round(sonuc["P"][kod], 1),
-                "Uygulanabilirlik": round(sonuc["U"][kod], 1),
-                "Çevresel": round(sonuc["C"][kod], 1),
-                "Yatırım (TL)": format_tl(sonuc["yatirim"][kod]),
-                "Yıllık Tasarruf (TL)": format_tl(sonuc["yillik_tasarruflar"][kod]),
-                "Geri Ödeme (yıl)": format_yil(sonuc["geri_odeme"][kod]),
+                "Priority": sonuc["oncelik"][kod],
+                "Investment Type": YATIRIM_ETIKETLERI[kod],
+                "Total Score": round(sonuc["toplam"][kod], 1),
+                "Economic": round(sonuc["E"][kod], 1),
+                "Technical": round(sonuc["T"][kod], 1),
+                "Performance": round(sonuc["P"][kod], 1),
+                "Feasibility": round(sonuc["U"][kod], 1),
+                "Environmental": round(sonuc["C"][kod], 1),
+                "Investment (TL)": format_tl(sonuc["yatirim"][kod]),
+                "Annual Savings (TL)": format_tl(sonuc["yillik_tasarruflar"][kod]),
+                "Payback (yrs)": format_yil(sonuc["geri_odeme"][kod]),
             })
 
         df = pd.DataFrame(tablo_data)
         st.dataframe(
             df, use_container_width=True, hide_index=True,
             column_config={
-                "Öncelik": st.column_config.NumberColumn("Öncelik", width="small"),
-                "Toplam Skor": st.column_config.NumberColumn("Toplam Skor", format="%.1f"),
+                "Priority": st.column_config.NumberColumn("Priority", width="small"),
+                "Total Score": st.column_config.NumberColumn("Total Score", format="%.1f"),
             },
         )
 
@@ -1728,16 +1727,16 @@ def main():
         st.markdown("")
         excel_data = excel_olustur(veri, sonuc)
         st.download_button(
-            label="📥 Excel Çıktısını İndir",
+            label="📥 Download Excel Report",
             data=excel_data,
-            file_name="enerji_pusulasi_sonuc.xlsx",
+            file_name="energy_compass_results.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             use_container_width=True,
         )
 
         # ===================== ÖN FİZİBİLİTE ÖZETİ =====================
         st.markdown(
-            '<div class="section-header"><div class="dot"></div><h2>Ön Fizibilite Özeti</h2></div>',
+            '<div class="section-header"><div class="dot"></div><h2>Pre-Feasibility Summary</h2></div>',
             unsafe_allow_html=True,
         )
 
@@ -1746,8 +1745,8 @@ def main():
             <div class="notice-banner">
                 <span class="n-icon">📋</span>
                 <span class="n-text">
-                    Bu çıktı detaylı mühendislik fizibilitesinin yerine geçmez;
-                    hızlı ön fizibilite ve yatırım önceliklendirme amacıyla üretilmiştir.
+                    This output does not replace detailed engineering feasibility;
+                    it was generated for rapid pre-feasibility and investment prioritization purposes.
                 </span>
             </div>
             """,
@@ -1761,25 +1760,25 @@ def main():
             go_val = sonuc["geri_odeme"][kod]
             etiket = durum_etiketi(toplam_s, go_val)
             fizibilite_data.append({
-                "Yatırım Türü": YATIRIM_ETIKETLERI[kod],
-                "Toplam Skor": round(toplam_s, 1),
-                "Öncelik": sonuc["oncelik"][kod],
-                "Tahmini Yatırım (TL)": format_tl(sonuc["yatirim"][kod]),
-                "Tahmini Yıllık Tasarruf (TL)": format_tl(sonuc["yillik_tasarruflar"][kod]),
-                "Geri Ödeme (yıl)": format_yil(go_val),
-                "Teknik Uygunluk": round(sonuc["T"][kod], 1),
-                "Uygulanabilirlik": round(sonuc["U"][kod], 1),
-                "Durum": etiket,
+                "Investment Type": YATIRIM_ETIKETLERI[kod],
+                "Total Score": round(toplam_s, 1),
+                "Priority": sonuc["oncelik"][kod],
+                "Est. Investment (TL)": format_tl(sonuc["yatirim"][kod]),
+                "Est. Annual Savings (TL)": format_tl(sonuc["yillik_tasarruflar"][kod]),
+                "Payback (yrs)": format_yil(go_val),
+                "Technical Suitability": round(sonuc["T"][kod], 1),
+                "Feasibility": round(sonuc["U"][kod], 1),
+                "Status": etiket,
             })
 
         df_fizibilite = pd.DataFrame(fizibilite_data)
         st.dataframe(
             df_fizibilite, use_container_width=True, hide_index=True,
             column_config={
-                "Öncelik": st.column_config.NumberColumn("Öncelik", width="small"),
-                "Toplam Skor": st.column_config.NumberColumn("Toplam Skor", format="%.1f"),
-                "Teknik Uygunluk": st.column_config.NumberColumn("Teknik Uygunluk", format="%.1f"),
-                "Uygulanabilirlik": st.column_config.NumberColumn("Uygulanabilirlik", format="%.1f"),
+                "Priority": st.column_config.NumberColumn("Priority", width="small"),
+                "Total Score": st.column_config.NumberColumn("Total Score", format="%.1f"),
+                "Technical Suitability": st.column_config.NumberColumn("Technical Suitability", format="%.1f"),
+                "Feasibility": st.column_config.NumberColumn("Feasibility", format="%.1f"),
             },
         )
 
@@ -1791,10 +1790,10 @@ def main():
             ikon = YATIRIM_IKONLARI[kod]
             ad = YATIRIM_ETIKETLERI[kod]
 
-            if etiket == "Güçlü öncelik":
+            if etiket == "Strong Priority":
                 etiket_renk = "#00C16A"
                 etiket_bg = "rgba(0,193,106,0.1)"
-            elif etiket == "Değerlendirilmeli":
+            elif etiket == "Needs Evaluation":
                 etiket_renk = "#E8A830"
                 etiket_bg = "rgba(232,168,48,0.1)"
             else:
@@ -1810,7 +1809,7 @@ def main():
                         <div style="display: flex; align-items: center; gap: 0.6rem;">
                             <span style="font-size: 1.4rem;">{ikon}</span>
                             <span style="font-size: 1.05rem; font-weight: 700; color: #0E2E5C;">{ad}</span>
-                            <span style="font-size: 0.85rem; font-weight: 700; color: #1F5FBF;">({toplam_s:.1f} puan – #{sonuc['oncelik'][kod]})</span>
+                            <span style="font-size: 0.85rem; font-weight: 700; color: #1F5FBF;">({toplam_s:.1f} pts – #{sonuc['oncelik'][kod]})</span>
                         </div>
                         <span style="display: inline-block; background: {etiket_bg}; color: {etiket_renk};
                                       border: 1px solid {etiket_renk}; border-radius: 20px;
@@ -1821,23 +1820,23 @@ def main():
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
                                 gap: 0.5rem; margin-top: 0.8rem;">
                         <div style="text-align: center; background: #EEF3FA; border-radius: 8px; padding: 0.5rem;">
-                            <div style="font-size: 0.7rem; color: #4A6B8A; font-weight: 600;">Yatırım Maliyeti</div>
+                            <div style="font-size: 0.7rem; color: #4A6B8A; font-weight: 600;">Investment Cost</div>
                             <div style="font-size: 0.95rem; font-weight: 700; color: #0E2E5C;">{format_tl(sonuc['yatirim'][kod])}</div>
                         </div>
                         <div style="text-align: center; background: #EEF3FA; border-radius: 8px; padding: 0.5rem;">
-                            <div style="font-size: 0.7rem; color: #4A6B8A; font-weight: 600;">Yıllık Tasarruf</div>
+                            <div style="font-size: 0.7rem; color: #4A6B8A; font-weight: 600;">Annual Savings</div>
                             <div style="font-size: 0.95rem; font-weight: 700; color: #0E2E5C;">{format_tl(sonuc['yillik_tasarruflar'][kod])}</div>
                         </div>
                         <div style="text-align: center; background: #EEF3FA; border-radius: 8px; padding: 0.5rem;">
-                            <div style="font-size: 0.7rem; color: #4A6B8A; font-weight: 600;">Geri Ödeme</div>
+                            <div style="font-size: 0.7rem; color: #4A6B8A; font-weight: 600;">Payback</div>
                             <div style="font-size: 0.95rem; font-weight: 700; color: #0E2E5C;">{format_yil(go_val)}</div>
                         </div>
                         <div style="text-align: center; background: #EEF3FA; border-radius: 8px; padding: 0.5rem;">
-                            <div style="font-size: 0.7rem; color: #4A6B8A; font-weight: 600;">Teknik Uygunluk</div>
+                            <div style="font-size: 0.7rem; color: #4A6B8A; font-weight: 600;">Technical Suitability</div>
                             <div style="font-size: 0.95rem; font-weight: 700; color: #0E2E5C;">{sonuc['T'][kod]:.1f}</div>
                         </div>
                         <div style="text-align: center; background: #EEF3FA; border-radius: 8px; padding: 0.5rem;">
-                            <div style="font-size: 0.7rem; color: #4A6B8A; font-weight: 600;">Uygulanabilirlik</div>
+                            <div style="font-size: 0.7rem; color: #4A6B8A; font-weight: 600;">Feasibility</div>
                             <div style="font-size: 0.95rem; font-weight: 700; color: #0E2E5C;">{sonuc['U'][kod]:.1f}</div>
                         </div>
                     </div>
@@ -1847,20 +1846,20 @@ def main():
             )
 
         # JSON
-        with st.expander("🔍 Detaylı Sonuç Verisi (JSON)"):
+        with st.expander("🔍 Detailed Result Data (JSON)"):
             json_cikti = {}
             for kod, _ in siralama:
                 json_cikti[YATIRIM_ETIKETLERI[kod]] = {
-                    "oncelik_sirasi": sonuc["oncelik"][kod],
-                    "toplam_skor": round(sonuc["toplam"][kod], 2),
-                    "ekonomik_cekicilik_skoru": round(sonuc["E"][kod], 2),
-                    "teknik_uygunluk_skoru": round(sonuc["T"][kod], 2),
-                    "performans_potansiyeli_skoru": round(sonuc["P"][kod], 2),
-                    "uygulanabilirlik_skoru": round(sonuc["U"][kod], 2),
-                    "cevresel_etki_skoru": round(sonuc["C"][kod], 2),
-                    "yatirim_maliyeti_tl": round(sonuc["yatirim"][kod], 0),
-                    "yillik_tasarruf_tl": round(sonuc["yillik_tasarruflar"][kod], 0),
-                    "basit_geri_odeme_yili": round(sonuc["geri_odeme"][kod], 2),
+                    "priority_rank": sonuc["oncelik"][kod],
+                    "total_score": round(sonuc["toplam"][kod], 2),
+                    "economic_attractiveness_score": round(sonuc["E"][kod], 2),
+                    "technical_suitability_score": round(sonuc["T"][kod], 2),
+                    "performance_potential_score": round(sonuc["P"][kod], 2),
+                    "feasibility_score": round(sonuc["U"][kod], 2),
+                    "environmental_impact_score": round(sonuc["C"][kod], 2),
+                    "investment_cost_tl": round(sonuc["yatirim"][kod], 0),
+                    "annual_savings_tl": round(sonuc["yillik_tasarruflar"][kod], 0),
+                    "simple_payback_years": round(sonuc["geri_odeme"][kod], 2),
                 }
             st.json(json_cikti)
 
@@ -1869,7 +1868,7 @@ def main():
         st.markdown(
             f"""
             <div class="explanation-card">
-                <div class="exp-title">💡 Değerlendirme Özeti</div>
+                <div class="exp-title">💡 Assessment Summary</div>
                 {aciklama}
             </div>
             """,
@@ -1877,38 +1876,38 @@ def main():
         )
 
         # Ara hesaplama detayları
-        with st.expander("⚙️ Ara Hesaplama Detayları"):
+        with st.expander("⚙️ Intermediate Calculation Details"):
             col1, col2 = st.columns(2)
             with col1:
-                st.markdown("**Genel Göstergeler**")
-                st.write(f"- Birim enerji maliyeti: {sonuc['birim_enerji_maliyeti']:.2f} TL/kWh")
-                st.write(f"- Yıllık tüketim: {sonuc['yillik_tuketim']:,.0f} kWh")
-                st.write(f"- Yıllık fatura: {format_tl(sonuc['yillik_fatura'])}")
-                st.write(f"- EV fırsat skoru: {sonuc['ev_firsat']:.1f}")
-                st.write(f"- Öz tüketim hedefi: {sonuc['oz_tuketim_hedefi']:.2f}")
+                st.markdown("**General Indicators**")
+                st.write(f"- Unit energy cost: {sonuc['birim_enerji_maliyeti']:.2f} TL/kWh")
+                st.write(f"- Annual consumption: {sonuc['yillik_tuketim']:,.0f} kWh")
+                st.write(f"- Annual bill: {format_tl(sonuc['yillik_fatura'])}")
+                st.write(f"- EE opportunity score: {sonuc['ev_firsat']:.1f}")
+                st.write(f"- Self-consumption target: {sonuc['oz_tuketim_hedefi']:.2f}")
             with col2:
-                st.markdown("**GES & Batarya**")
-                st.write(f"- PV ihtiyaç: {sonuc['pv_ihtiyac']:.1f} kWp")
-                st.write(f"- PV çatı maks: {sonuc['pv_cati_max']:.1f} kWp")
-                st.write(f"- PV kurulu güç: {sonuc['pv_kwp']:.1f} kWp")
-                st.write(f"- GES yıllık üretim: {sonuc['yillik_uretim_ges']:,.0f} kWh")
-                st.write(f"- GES faydalı enerji: {sonuc['faydali_enerji_ges']:,.0f} kWh")
-                st.write(f"- Kritik güç: {sonuc['kritik_guc_kw']:.1f} kW")
-                st.write(f"- Batarya süresi: {sonuc['batarya_sure']} saat")
-                st.write(f"- Batarya kapasitesi: {sonuc['batarya_kapasitesi_kwh']:.1f} kWh")
+                st.markdown("**Solar PV & Battery**")
+                st.write(f"- PV requirement: {sonuc['pv_ihtiyac']:.1f} kWp")
+                st.write(f"- PV roof max: {sonuc['pv_cati_max']:.1f} kWp")
+                st.write(f"- PV installed capacity: {sonuc['pv_kwp']:.1f} kWp")
+                st.write(f"- Solar PV annual production: {sonuc['yillik_uretim_ges']:,.0f} kWh")
+                st.write(f"- Solar PV useful energy: {sonuc['faydali_enerji_ges']:,.0f} kWh")
+                st.write(f"- Critical power: {sonuc['kritik_guc_kw']:.1f} kW")
+                st.write(f"- Battery duration: {sonuc['batarya_sure']} hours")
+                st.write(f"- Battery capacity: {sonuc['batarya_kapasitesi_kwh']:.1f} kWh")
 
-            st.markdown("**Tasarruf Oranları**")
-            st.write(f"- EV: %{sonuc['tasarruf_orani_ev'] * 100:.1f}")
-            st.write(f"- YK: %{sonuc['tasarruf_orani_yk'] * 100:.1f}")
+            st.markdown("**Savings Ratios**")
+            st.write(f"- EE: %{sonuc['tasarruf_orani_ev'] * 100:.1f}")
+            st.write(f"- LM: %{sonuc['tasarruf_orani_yk'] * 100:.1f}")
             st.write(f"- BAT: %{sonuc['tasarruf_orani_bat'] * 100:.1f}")
 
     # ===================== FOOTER =====================
     st.markdown(
         """
         <div class="ep-footer">
-            <strong>EN²TECH 2026</strong> – Enerji Pusulası &nbsp;|&nbsp;
-            Hızlı Ön Fizibilite & Yatırım Önceliklendirme<br>
-            <em>Bu araç detaylı mühendislik fizibilitesinin yerine geçmez.</em>
+            <strong>EN²TECH 2026</strong> – Energy Compass &nbsp;|&nbsp;
+            Rapid Pre-Feasibility & Investment Prioritization<br>
+            <em>This tool does not replace detailed engineering feasibility.</em>
         </div>
         """,
         unsafe_allow_html=True,
